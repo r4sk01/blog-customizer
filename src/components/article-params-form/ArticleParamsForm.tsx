@@ -6,7 +6,12 @@ import styles from './ArticleParamsForm.module.scss';
 export const ArticleParamsForm = () => {
 	return (
 		<>
-			<ArrowButton />
+			<ArrowButton
+				isOpen={false}
+				toggleArrow={() => {
+					console.log('k');
+				}}
+			/>
 			<aside className={styles.container}>
 				<form className={styles.form}>
 					<div className={styles.bottomContainer}>
