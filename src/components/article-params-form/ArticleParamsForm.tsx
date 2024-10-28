@@ -3,9 +3,7 @@ import { Button } from 'components/button';
 import { RadioGroup } from 'components/radio-group';
 import { Separator } from 'components/separator';
 import { Select } from 'components/select';
-
 import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
-
 import {
 	defaultArticleState,
 	ArticleStateType,
@@ -15,7 +13,6 @@ import {
 	fontFamilyOptions,
 	fontSizeOptions,
 } from 'src/constants/articleProps';
-
 import styles from './ArticleParamsForm.module.scss';
 
 type ArticleParamsProps = {
@@ -25,77 +22,49 @@ type ArticleParamsProps = {
 export const ArticleParamsForm = ({
 	setArticleState,
 }: ArticleParamsProps): ReactElement => {
-	// States
-	const [isSideMenuOpen, setIsSideMenuOpen] = useState(false);
-	const [selectedFont, setSelectedFont] = useState(
-		defaultArticleState.fontFamilyOption
-	);
-	const [selectedFontSize, setSelectedFontSize] = useState(
-		defaultArticleState.fontFamilyOption
-	);
-	const [selectedFontColor, setSelectedFontColor] = useState(
-		defaultArticleState.fontColor
-	);
-	const [selectedBackgroundColor, setSelectedBackgroundColor] = useState(
-		defaultArticleState.backgroundColor
-	);
-	const [selectedContentWidth, setSelectedContentWidth] = useState(
-		defaultArticleState.contentWidth
-	);
+	// Combined state as a single object
+	const [formState, setFormState] = useState({
+		isSideMenuOpen: false,
+		selectedFont: defaultArticleState.fontFamilyOption,
+		selectedFontSize: defaultArticleState.fontFamilyOption,
+		selectedFontColor: defaultArticleState.fontColor,
+		selectedBackgroundColor: defaultArticleState.backgroundColor,
+		selectedContentWidth: defaultArticleState.contentWidth,
+	});
 
-	const openSideMenu = (): void => {
-		setIsSideMenuOpen((prevState) => !prevState);
-	};
-
-	// Reference
 	const formReference = useRef<HTMLDivElement>(null);
 
-	// Customization Handlers
-	const handleFontFamilyChange = (
-		fontFamily: typeof defaultArticleState.fontFamilyOption
-	): void => {
-		setSelectedFont(fontFamily);
-		console.log(`Вы выбрали шрифт: ${fontFamily.title}`);
-	};
-	const handleFontSizeChange = (
-		size: typeof defaultArticleState.fontSizeOption
-	): void => {
-		setSelectedFontSize(size);
-		console.log(`Font size is: ${size.title}`);
-	};
-	const handleFontColorChange = (
-		color: typeof defaultArticleState.fontColor
-	): void => {
-		setSelectedFontColor(color);
-		console.log(`Font color is: ${color.title}`);
-	};
-	const handleBackgroundColorChange = (
-		bgColor: typeof defaultArticleState.backgroundColor
-	): void => {
-		setSelectedBackgroundColor(bgColor);
-		console.log(`Background color is: ${bgColor.title}`);
-	};
-	const handleContentWidthChange = (
-		width: typeof defaultArticleState.contentWidth
-	): void => {
-		setSelectedContentWidth(width);
-		console.log(`Content width is: ${width.title}`);
+	// Generic handler for all form field changes
+	const handleFieldChange = (field: string, value: unknown): void => {
+		setFormState((prev) => ({ ...prev, [field]: value }));
 	};
 
-	// Events Handlers for Form
+	const toggleSideMenu = (): void => {
+		setFormState((prev) => ({ ...prev, isSideMenuOpen: !prev.isSideMenuOpen }));
+	};
 
-	const formResetHandler = () => {
+	const resetForm = (): void => {
 		setArticleState(defaultArticleState);
-		setSelectedFont(defaultArticleState.fontFamilyOption);
-		setSelectedFontColor(defaultArticleState.fontColor);
-		setSelectedFontSize(defaultArticleState.fontSizeOption);
-		setSelectedBackgroundColor(defaultArticleState.backgroundColor);
-		setSelectedContentWidth(defaultArticleState.contentWidth);
-		setIsSideMenuOpen(false);
+		setFormState({
+			isSideMenuOpen: false,
+			selectedFont: defaultArticleState.fontFamilyOption,
+			selectedFontSize: defaultArticleState.fontFamilyOption,
+			selectedFontColor: defaultArticleState.fontColor,
+			selectedBackgroundColor: defaultArticleState.backgroundColor,
+			selectedContentWidth: defaultArticleState.contentWidth,
+		});
 	};
 
-	const formSubmitHandler = (e: FormEvent) => {
+	const handleSubmit = (e: FormEvent): void => {
 		e.preventDefault();
+		const {
+			selectedFont,
+			selectedFontSize,
+			selectedFontColor,
+			selectedBackgroundColor,
+			selectedContentWidth,
+		} = formState;
+
 		setArticleState({
 			fontFamilyOption: selectedFont,
 			fontSizeOption: selectedFontSize,
@@ -103,94 +72,104 @@ export const ArticleParamsForm = ({
 			backgroundColor: selectedBackgroundColor,
 			contentWidth: selectedContentWidth,
 		});
-		setIsSideMenuOpen(false);
+
+		handleFieldChange('isSideMenuOpen', false);
 	};
 
 	useEffect(() => {
+		if (!formState.isSideMenuOpen) return;
+
 		const handleClickOutside = (event: MouseEvent): void => {
 			if (
 				formReference.current &&
 				!formReference.current.contains(event.target as Node)
 			) {
-				setIsSideMenuOpen(false);
+				handleFieldChange('isSideMenuOpen', false);
 			}
 		};
 
-		const handleEscDown = (e: KeyboardEvent) => {
+		const handleEscDown = (e: KeyboardEvent): void => {
 			if (e.key === 'Escape') {
-				setIsSideMenuOpen(false);
+				handleFieldChange('isSideMenuOpen', false);
 			}
 		};
 
-		if (isSideMenuOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-			document.addEventListener('keydown', handleEscDown);
-		} else {
-			document.removeEventListener('mousedown', handleClickOutside);
-			document.removeEventListener('keydown', handleEscDown);
-		}
+		document.addEventListener('mousedown', handleClickOutside);
+		document.addEventListener('keydown', handleEscDown);
 
 		return () => {
 			document.removeEventListener('mousedown', handleClickOutside);
 			document.removeEventListener('keydown', handleEscDown);
 		};
-	}, [isSideMenuOpen]);
+	}, [formState.isSideMenuOpen]);
 
 	return (
 		<>
-			<ArrowButton isOpen={isSideMenuOpen} toggleArrow={openSideMenu} />
+			<ArrowButton
+				isOpen={formState.isSideMenuOpen}
+				toggleArrow={toggleSideMenu}
+			/>
 			<aside
 				ref={formReference}
 				className={`${styles.container} ${
-					isSideMenuOpen ? styles.container_open : ''
+					formState.isSideMenuOpen ? styles.container_open : ''
 				}`}
-				style={{ backgroundColor: selectedFontColor.value }}>
-				<form className={styles.form} onSubmit={formSubmitHandler}>
+				style={{ backgroundColor: formState.selectedFontColor.value }}>
+				<form className={styles.form} onSubmit={handleSubmit}>
 					<h2 className={styles.formHeader}>Задайте параметры</h2>
+
 					<Select
 						title='шрифт'
 						options={fontFamilyOptions}
-						selected={selectedFont}
+						selected={formState.selectedFont}
 						placeholder='Выберите шрифт'
 						onChange={(selected) =>
-							selected && handleFontFamilyChange(selected)
+							selected && handleFieldChange('selectedFont', selected)
 						}
 					/>
+
 					<RadioGroup
 						name='font-size'
 						options={fontSizeOptions}
-						selected={selectedFontSize}
-						onChange={handleFontSizeChange}
+						selected={formState.selectedFontSize}
+						onChange={(value) => handleFieldChange('selectedFontSize', value)}
 						title='Размер шрифта'
 					/>
+
 					<Select
 						title='Цвет шрифта'
 						options={fontColors}
-						selected={selectedFontColor}
+						selected={formState.selectedFontColor}
 						placeholder='Выберите цвет шрифта'
-						onChange={(selected) => selected && handleFontColorChange(selected)}
+						onChange={(selected) =>
+							selected && handleFieldChange('selectedFontColor', selected)
+						}
 					/>
+
 					<Separator />
+
 					<Select
 						title='Цвет фона'
 						options={backgroundColors}
-						selected={selectedBackgroundColor}
+						selected={formState.selectedBackgroundColor}
 						placeholder='Выберите цвет фона'
 						onChange={(selected) =>
-							selected && handleBackgroundColorChange(selected)
+							selected && handleFieldChange('selectedBackgroundColor', selected)
 						}
 					/>
+
 					<Select
 						title='Ширина контента'
 						options={contentWidthArr}
-						selected={selectedContentWidth}
+						selected={formState.selectedContentWidth}
 						placeholder='Выберите ширину контента'
 						onChange={(selected) =>
-							selected && handleContentWidthChange(selected)
+							selected && handleFieldChange('selectedContentWidth', selected)
 						}
 					/>
+
 					<div className={styles.bottomContainer}>
-						<Button title='Сбросить' type='reset' onClick={formResetHandler} />
+						<Button title='Сбросить' type='reset' onClick={resetForm} />
 						<Button title='Применить' type='submit' />
 					</div>
 				</form>
