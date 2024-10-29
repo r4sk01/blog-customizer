@@ -3,7 +3,7 @@ import { Button } from 'components/button';
 import { RadioGroup } from 'components/radio-group';
 import { Separator } from 'components/separator';
 import { Select } from 'components/select';
-import { FormEvent, ReactElement, useEffect, useRef, useState } from 'react';
+import { FormEvent, ReactElement, useRef, useState } from 'react';
 import {
 	defaultArticleState,
 	ArticleStateType,
