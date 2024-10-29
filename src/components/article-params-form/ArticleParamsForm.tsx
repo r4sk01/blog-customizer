@@ -14,6 +14,7 @@ import {
 	fontSizeOptions,
 } from 'src/constants/articleProps';
 import styles from './ArticleParamsForm.module.scss';
+import { useOutsideClick } from 'components/article-params-form/hooks/useOutsideClick';
 
 type ArticleParamsProps = {
 	setArticleState: (state: ArticleStateType) => void;
@@ -30,6 +31,12 @@ export const ArticleParamsForm = ({
 
 	const formReference = useRef<HTMLDivElement>(null);
 
+	useOutsideClick({
+		isOpen: isSideMenuOpen,
+		onClose: () => setIsSideMenuOpen(false),
+		ref: formReference,
+	});
+
 	const handleFieldChange = (
 		field: keyof ArticleStateType,
 		value: unknown
@@ -44,6 +51,7 @@ export const ArticleParamsForm = ({
 	const resetForm = (): void => {
 		setArticleState(defaultArticleState);
 		setFormState(defaultArticleState);
+		setIsSideMenuOpen(false);
 	};
 
 	const handleSubmit = (e: FormEvent): void => {
@@ -51,33 +59,6 @@ export const ArticleParamsForm = ({
 		setArticleState(formState);
 		setIsSideMenuOpen(false);
 	};
-
-	useEffect(() => {
-		if (!isSideMenuOpen) return;
-
-		const handleClickOutside = (event: MouseEvent): void => {
-			if (
-				formReference.current &&
-				!formReference.current.contains(event.target as Node)
-			) {
-				setIsSideMenuOpen(false);
-			}
-		};
-
-		const handleEscDown = (e: KeyboardEvent): void => {
-			if (e.key === 'Escape') {
-				setIsSideMenuOpen(false);
-			}
-		};
-
-		document.addEventListener('mousedown', handleClickOutside);
-		document.addEventListener('keydown', handleEscDown);
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-			document.removeEventListener('keydown', handleEscDown);
-		};
-	}, [isSideMenuOpen]);
 
 	return (
 		<>
